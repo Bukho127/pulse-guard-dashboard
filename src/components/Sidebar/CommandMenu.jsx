@@ -40,7 +40,7 @@ const [value, setValue] = useState('')
       <Command.List>
         <Command.Empty>
             No results found for
-            <span className='text-violet-500'>"{value}"</span>
+            <span className='text-[#57B74A]'>"{value}"</span>
         </Command.Empty>
 
         <Command.Group heading="Incidents" className='text-sm mb-3 text-stone-400 p-3'>

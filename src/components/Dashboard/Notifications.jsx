@@ -2,7 +2,7 @@ import { FiBell } from "react-icons/fi"
 import { useState } from 'react'
 
 const Notifications = () => {
-    const [notificationCount, setNotificationCount] = useState(1)
+    const [notificationCount, setNotificationCount] = useState(0)
 
     const handleNotification = () => {
         setNotificationCount(0)
