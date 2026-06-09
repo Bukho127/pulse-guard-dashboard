@@ -1,10 +1,11 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Incidents from "./Incidents"
 import TopBar from "./TopBar"
+import Grid from "./Grid"
 
 const DashboardHome = () => (
-  <div className='px-4'>
-    Dashboad
+  <div>
+    <Grid />
   </div>
 )
 
