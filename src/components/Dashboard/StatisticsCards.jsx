@@ -1,45 +1,40 @@
-import React from 'react'
-import { FiTrendingUp } from 'react-icons/fi';
-import { FiTrendingDown } from 'react-icons/fi';
+import { FiTrendingDown, FiTrendingUp } from 'react-icons/fi';
 
 function StatisticsCards() {
     return (
         <>
             <Card
-                title="Total Users"
+                title="Video Reports"
                 value="1,234"
-                description="Increase by 12.5% from last month"
-                pillText="3.456%"
+                pillText="12.5%"
                 trend="up"
-                period="From 1st Jan to 31st Jan"
+                period="Submitted in the last 30 days"
             />
             <Card
-                title="Total Revenue"
-                value="5,678"
-                description="Increase by 8.2% from last month"
-                pillText="2.889%"
+                title="Verified Incidents"
+                value="326"
+                pillText="8.2%"
                 trend="up"
-                period="From 1st Jan to 31st Jan"
+                period="Confirmed by review team"
             />
             <Card
-                title="Conversion Rate"
-                value="4.5%"
-                description="Decrease by 1.2% from last month"
-                pillText="2.7%"
+                title="Pending Review"
+                value="47"
+                pillText="6.1%"
                 trend="down"
-                period="From 1st Jan to 31st Jan"
+                period="Awaiting evidence assessment"
             />
         </>
     )
 }
-const Card = ({ title, value, description, pillText, trend, period }) => {
-    return <div className="col-span-4 p-4 rounded border border-stone-300 shadow">
+const Card = ({ title, value, pillText, trend, period }) => {
+    return <div className="col-span-12 rounded border border-stone-300 p-4 shadow md:col-span-4">
         <div className="flex mb-8 items-start justify-between">
             <div>
                 <h3 className="text-stone-500 mb-2 text-sm">{title}</h3>
-                <p className="text-3xl font-semibold">${value}</p>
+                <p className="text-3xl font-semibold">{value}</p>
             </div>
-              <span className={`text-sm font-medium flex items-center gap-1 font-medium px-2 py-1 rounded ${trend === 'up' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+              <span className={`flex items-center gap-1 rounded px-2 py-1 text-sm font-medium ${trend === 'up' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
                 {trend === 'up' ? <FiTrendingUp /> : <FiTrendingDown />}
                 {pillText}
               </span>

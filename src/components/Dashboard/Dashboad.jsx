@@ -4,32 +4,35 @@ import TopBar from "./TopBar"
 import Grid from "./Grid"
 
 const DashboardHome = () => (
-  <div>
-    <Grid />
-  </div>
+  <Grid />
 )
 
 const PlaceholderPage = ({ title }) => (
   <div className='px-4'>
-    {title}
+    <div className='rounded border border-stone-300 bg-white p-6'>
+      <h2 className='text-lg font-semibold text-stone-950'>{title}</h2>
+      <p className='mt-2 max-w-xl text-sm text-stone-500'>
+        This workspace is ready for the next dashboard module.
+      </p>
+    </div>
   </div>
 )
 
-const Dashboad = () => {
+const Dashboard = () => {
   return (
-    <div className='bg-white rounded-lg pb-4 shadow h-[200vh]'>
-        <TopBar/>
-        <Routes>
-          <Route path='/' element={<DashboardHome />} />
-          <Route path='/incidents' element={<Incidents />} />
-          <Route path='/reports' element={<PlaceholderPage title='Pending Reports' />} />
-          <Route path='/analysis' element={<PlaceholderPage title='Analysis' />} />
-          <Route path='/heatmap' element={<PlaceholderPage title='Heatmap' />} />
-          <Route path='/schedule' element={<PlaceholderPage title='Schedule' />} />
-          <Route path='*' element={<Navigate to='/' replace />} />
-        </Routes>
-    </div>
+    <main className='min-w-0 rounded-lg bg-white pb-4 shadow'>
+      <TopBar />
+      <Routes>
+        <Route path='/' element={<DashboardHome />} />
+        <Route path='/incidents' element={<Incidents />} />
+        <Route path='/reports' element={<PlaceholderPage title='Pending Reports' />} />
+        <Route path='/analysis' element={<PlaceholderPage title='Analysis' />} />
+        <Route path='/heatmap' element={<PlaceholderPage title='Heatmap' />} />
+        <Route path='/schedule' element={<PlaceholderPage title='Schedule' />} />
+        <Route path='*' element={<Navigate to='/' replace />} />
+      </Routes>
+    </main>
   )
 }
 
-export default Dashboad
+export default Dashboard

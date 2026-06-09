@@ -7,8 +7,7 @@ const AccountToggle = () => {
     >
     <button className='flex p-0.5 hover:bg-stone-200 rounded transition-colors relative gap-2
     w-full items-center' >
-        <img src="https://api.dicebear.com/9.x/initials/svg?seed=Bukho&backgroundColor=57B74A&textColor=ffffff
-        " alt="avatar" className='size-8 rounded-shrink bg-[#57B74A] shadow'
+        <img src="https://api.dicebear.com/9.x/initials/svg?seed=Bukho&backgroundColor=57B74A&textColor=ffffff" alt="avatar" className='size-8 shrink-0 rounded-full bg-[#57B74A] shadow'
          />
          <div className='text-start'>
             <span className='text-sm font-bold block'>

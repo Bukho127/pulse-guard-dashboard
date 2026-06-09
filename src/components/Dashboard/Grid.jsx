@@ -1,19 +1,15 @@
-import React from 'react'
 import StatisticsCards from './StatisticsCards'
 import ActivityGraph from './ActivityGraph'
-import RadarChart from './RadarChart'
 import RadarCharts from './RadarChart'
 import RecentIncidents from './RecentIncidents'
 
 function Grid() {
     return (
-        <div className='px-4 grid gap-3 grid-cols-12'>
+        <div className='grid grid-cols-12 gap-3 px-4'>
             <StatisticsCards />
             <ActivityGraph />
-            <RadarCharts/>
+            <RadarCharts />
             <RecentIncidents />
-
-
         </div>
     )
 }

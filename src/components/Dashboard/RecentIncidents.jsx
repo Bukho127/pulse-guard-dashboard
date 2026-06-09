@@ -1,5 +1,5 @@
-import React from 'react'
-import { FiAlertTriangle, FiEdit } from 'react-icons/fi';
+import { FiAlertTriangle, FiArrowUpRight, FiEdit } from 'react-icons/fi';
+import { incidents } from './incidentData';
 
 function RecentIncidents() {
     return (
@@ -12,17 +12,16 @@ function RecentIncidents() {
                 </button>
 
             </div>
-            <table className='w-full table-auto'>
-                <TableHeader />
-                <tbody>
-                    <TableRow id="INC12345" location="New York" status="Open" date="2024-06-01" order={1} />
-                    <TableRow id="INC12346" location="Los Angeles" status="In Progress" date="2024-06-02" order={2} />
-                    <TableRow id="INC12347" location="Chicago" status="Resolved" date="2024-06-03" order={3} />
-                    <TableRow id="INC12348" location="Houston" status="Open" date="2024-06-04" order={4} />
-                    <TableRow id="INC12349" location="Phoenix" status="In Progress" date="2024-06-05" order={5} />
-                </tbody>
-
-            </table>
+            <div className='overflow-x-auto'>
+                <table className='w-full min-w-[680px] table-auto'>
+                    <TableHeader />
+                    <tbody>
+                        {incidents.map((incident, index) => (
+                            <TableRow key={incident.id} {...incident} order={index + 1} />
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     )
 
@@ -35,6 +34,7 @@ const TableHeader = () => {
                 <th className='text-start p-2'>Incident ID</th>
                 <th className='text-left p-2'>Location</th>
                 <th className='text-left p-2'>Status</th>
+                <th className='text-left p-2'>Priority</th>
                 <th className='text-left p-2'>Date</th>
                 <th className='w-8 p-2'></th>
             </tr>
@@ -43,12 +43,32 @@ const TableHeader = () => {
 
 }
 
-const TableRow = ({ id, location, status, date, order }) => {
+const statusStyles = {
+    Open: 'bg-red-100 text-red-700',
+    'In Progress': 'bg-amber-100 text-amber-700',
+    Resolved: 'bg-green-100 text-green-700',
+}
+
+const priorityStyles = {
+    High: 'text-red-600',
+    Medium: 'text-amber-600',
+    Low: 'text-green-600',
+}
+
+const TableRow = ({ id, location, status, priority, date, order }) => {
     return (
         <tr className={`text-sm ${order % 2 === 0 ? 'bg-stone-100' : 'bg-white'}`}>
-            <td className='p-2'>{id}</td>
+            <td className='p-2 flex items-center gap-2 text-[#57B74A] hover:text-green-600 transition-colors duration-200 cursor-pointer'>
+                 {id}
+                <FiArrowUpRight />
+            </td>
             <td className='p-2'>{location}</td>
-            <td className='p-2'>{status}</td>
+            <td className='p-2'>
+                <span className={`rounded px-2 py-1 text-xs font-medium ${statusStyles[status]}`}>
+                    {status}
+                </span>
+            </td>
+            <td className={`p-2 font-medium ${priorityStyles[priority]}`}>{priority}</td>
             <td className='p-2'>{date}</td>
             <td className='p-2 text-right'>
                 <button className='text-sm text-stone-500 hover:text-green-600 transition-colors duration-200 flex items-center gap-1'>

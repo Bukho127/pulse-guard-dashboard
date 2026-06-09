@@ -1,5 +1,4 @@
-import React from 'react'
-import { FiEye } from 'react-icons/fi';
+import { FiShield } from 'react-icons/fi';
 import {
     RadarChart,
     PolarGrid,
@@ -12,19 +11,19 @@ import {
 } from "recharts";
 
 const data = [
-    { name: 'Jan', users: 4000 },
-    { name: 'Feb', users: 3000 },
-    { name: 'Mar', users: 2000 },
-    { name: 'Apr', users: 2780 },
-    { name: 'May', users: 1890 },
-    { name: 'Jun', users: 2390 },
+    { name: 'Khayelitsha', reports: 84 },
+    { name: 'Philippi', reports: 62 },
+    { name: 'Nyanga', reports: 71 },
+    { name: 'Langa', reports: 48 },
+    { name: 'Gugulethu', reports: 56 },
+    { name: 'Mitchells Plain', reports: 67 },
 ];
 
 function RadarCharts() {
     return (
-        <div className='col-span-4 overflow-hidden rounded border border-stone-300'>
+        <div className='col-span-12 overflow-hidden rounded border border-stone-300 xl:col-span-4'>
             <div className='p-4'>
-                <h3 className="flex items-center gap-1.5 font-medium"><FiEye />Usage</h3>
+                <h3 className="flex items-center gap-1.5 font-medium"><FiShield /> Report Locations</h3>
             </div>
 
             <ResponsiveContainer width="100%" height={250}>
@@ -35,7 +34,7 @@ function RadarCharts() {
                     <PolarGrid />
                     <PolarAngleAxis dataKey="name" />
                     <PolarRadiusAxis />
-                    <Radar name="Users" dataKey="users" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+                    <Radar name="Video reports" dataKey="reports" stroke="#57B74A" fill="#57B74A" fillOpacity={0.55} />
                     <Tooltip />
                     <Legend />
                 </RadarChart>

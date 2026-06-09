@@ -1,6 +1,5 @@
 import { Command } from 'cmdk'
-import { useEffect } from 'react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FiPlus, FiEye } from 'react-icons/fi'
 
 const CommandMenu = ({
@@ -38,9 +37,9 @@ const [value, setValue] = useState('')
        placeholder='What do you want to do?'
        className='relative border-b border-stone-200 p-3 w-full  text-lg placeholder:text-stone-400 focus:outline-none' />
       <Command.List>
-        <Command.Empty>
+        <Command.Empty className='p-3 text-sm text-stone-500'>
             No results found for
-            <span className='text-[#57B74A]'>"{value}"</span>
+            <span className='text-[#57B74A]'> "{value}"</span>
         </Command.Empty>
 
         <Command.Group heading="Incidents" className='text-sm mb-3 text-stone-400 p-3'>
@@ -50,7 +49,7 @@ const [value, setValue] = useState('')
                 New Incident
           </Command.Item>
           <Command.Item className='flex cursor-pointer transition-colors p-2 text-sm
-          text-stone-950 hover:bg-stone-200 riounded items-center gap-2'>
+          text-stone-950 hover:bg-stone-200 rounded items-center gap-2'>
             <FiEye/>
                 View Incidents
           </Command.Item>

@@ -1,5 +1,4 @@
-import React from 'react'
-import { FiUser } from 'react-icons/fi';
+import { FiVideo } from 'react-icons/fi';
 import {
     LineChart,
     CartesianGrid,
@@ -8,38 +7,41 @@ import {
     Tooltip,
     Legend,
     Line,
+    ResponsiveContainer,
 } from "recharts";
 
 const data = [
-    { name: 'Jan', users: 4000, revenue: 2400 },
-    { name: 'Feb', users: 3000, revenue: 1398 },
-    { name: 'Mar', users: 2000, revenue: 9800 },
-    { name: 'Apr', users: 2780, revenue: 3908 },
-    { name: 'May', users: 1890, revenue: 4800 },
-    { name: 'Jun', users: 2390, revenue: 3800 },
+    { name: 'Jan', reports: 138, verified: 42 },
+    { name: 'Feb', reports: 164, verified: 51 },
+    { name: 'Mar', reports: 149, verified: 46 },
+    { name: 'Apr', reports: 188, verified: 63 },
+    { name: 'May', reports: 212, verified: 72 },
+    { name: 'Jun', reports: 197, verified: 68 },
 ];
 
 function ActivityGraph() {
     return (
-        <div className='col-span-8 overflow-hidden rounded border border-stone-300'>
+        <div className='col-span-12 overflow-hidden rounded border border-stone-300 xl:col-span-8'>
             <div className='p-4'>
-                <h3 className="flex items-center gap-1.5 font-medium"><FiUser /> Activity</h3>
+                <h3 className="flex items-center gap-1.5 font-medium"><FiVideo /> Report Activity</h3>
             </div>
 
-            <LineChart
-                width={730}
-                height={250}
-                data={data}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-            >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="users" stroke="#8884d8" />
-                <Line type="monotone" dataKey="revenue" stroke="#82ca9d" />
-            </LineChart>
+            <div className='h-[250px]'>
+                <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                        data={data}
+                        margin={{ top: 5, right: 24, left: 0, bottom: 5 }}
+                    >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Line type="monotone" name="Video reports" dataKey="reports" stroke="#57B74A" strokeWidth={2} />
+                        <Line type="monotone" name="Verified incidents" dataKey="verified" stroke="#2563eb" strokeWidth={2} />
+                    </LineChart>
+                </ResponsiveContainer>
+            </div>
         </div>
     )
 }

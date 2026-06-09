@@ -1,5 +1,11 @@
 import Notifications from "./Notifications"
 
+const formattedDate = new Intl.DateTimeFormat('en-US', {
+  weekday: 'long',
+  month: 'long',
+  day: 'numeric',
+  year: 'numeric',
+}).format(new Date())
 
 const TopBar = () => {
   return (
@@ -10,7 +16,7 @@ const TopBar = () => {
             Welcome Back, Bukho!
           </span>
           <span className='block text-xs text-stone-500'>
-            Saturday, May 2nd 2026
+            {formattedDate}
           </span>
         </div>
         <Notifications/>
