@@ -3,6 +3,7 @@ import StatisticsCards from './StatisticsCards'
 import ActivityGraph from './ActivityGraph'
 import RadarChart from './RadarChart'
 import RadarCharts from './RadarChart'
+import RecentIncidents from './RecentIncidents'
 
 function Grid() {
     return (
@@ -10,6 +11,8 @@ function Grid() {
             <StatisticsCards />
             <ActivityGraph />
             <RadarCharts/>
+            <RecentIncidents />
+
 
         </div>
     )
