@@ -44,9 +44,9 @@ const TableHeader = () => {
 }
 
 const statusStyles = {
-    Open: 'bg-red-100 text-red-700',
-    'In Progress': 'bg-amber-100 text-amber-700',
-    Resolved: 'bg-green-100 text-green-700',
+    Open: 'text-red-700',
+    'In Progress': 'text-amber-700',
+    Resolved: 'text-green-700',
 }
 
 const priorityStyles = {
@@ -58,7 +58,7 @@ const priorityStyles = {
 const TableRow = ({ id, location, status, priority, date, order }) => {
     return (
         <tr className={`text-sm ${order % 2 === 0 ? 'bg-stone-100' : 'bg-white'}`}>
-            <td className='p-2 flex items-center gap-2 text-[#57B74A] hover:text-green-600 transition-colors duration-200 cursor-pointer'>
+            <td className='flex cursor-pointer items-center gap-2 p-2 text-[#57B74A] underline underline-offset-2 transition-colors duration-200 hover:text-green-600'>
                  {id}
                 <FiArrowUpRight />
             </td>
