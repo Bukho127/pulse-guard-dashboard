@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import Incidents from "./Incidents"
 import TopBar from "./TopBar"
 import Grid from "./Grid"
+import Heatmap from "./Heatmap"
 
 const DashboardHome = () => (
   <Grid />
@@ -27,7 +28,7 @@ const Dashboard = () => {
         <Route path='/incidents' element={<Incidents />} />
         <Route path='/reports' element={<PlaceholderPage title='Pending Reports' />} />
         <Route path='/analysis' element={<PlaceholderPage title='Analysis' />} />
-        <Route path='/heatmap' element={<PlaceholderPage title='Heatmap' />} />
+        <Route path='/heatmap' element={<Heatmap />} />
         <Route path='/schedule' element={<PlaceholderPage title='Schedule' />} />
         <Route path='*' element={<Navigate to='/' replace />} />
       </Routes>

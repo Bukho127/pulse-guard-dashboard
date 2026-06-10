@@ -9,6 +9,7 @@ import {
     Line,
     ResponsiveContainer,
 } from "recharts";
+import ChartTooltip from './ChartTooltip';
 
 const data = [
     { name: 'Jan', reports: 138, verified: 42 },
@@ -32,11 +33,11 @@ function ActivityGraph() {
                         data={data}
                         margin={{ top: 5, right: 24, left: 0, bottom: 5 }}
                     >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
+                        <CartesianGrid stroke="#e7e5e4" strokeDasharray="3 3" />
+                        <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#78716c' }} axisLine={{ stroke: '#d6d3d1' }} tickLine={false} />
+                        <YAxis tick={{ fontSize: 12, fill: '#78716c' }} axisLine={false} tickLine={false} />
+                        <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#a8a29e', strokeDasharray: '3 3' }} />
+                        <Legend wrapperStyle={{ color: '#57534e', fontSize: 12 }} />
                         <Line type="monotone" name="Video reports" dataKey="reports" stroke="#57B74A" strokeWidth={2} />
                         <Line type="monotone" name="Verified incidents" dataKey="verified" stroke="#2563eb" strokeWidth={2} />
                     </LineChart>

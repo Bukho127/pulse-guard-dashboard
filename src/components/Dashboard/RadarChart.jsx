@@ -9,6 +9,7 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from "recharts";
+import ChartTooltip from './ChartTooltip';
 
 const data = [
     { period: 'Jan', khayelitsha: 64, philippi: 42, nyanga: 55, langa: 31 },
@@ -38,9 +39,9 @@ function RadarCharts() {
                     data={data}
                     margin={{ top: 18, right: 34, bottom: 34, left: 34 }}
                 >
-                    <PolarGrid />
+                    <PolarGrid stroke="#e7e5e4" />
                     <PolarAngleAxis dataKey="period" tick={{ fontSize: 9, fill: '#57534e' }} />
-                    <PolarRadiusAxis tick={{ fontSize: 9 }} />
+                    <PolarRadiusAxis tick={{ fontSize: 9, fill: '#78716c' }} axisLine={false} />
                     {locations.map((location) => (
                         <Radar
                             key={location.key}
@@ -52,7 +53,7 @@ function RadarCharts() {
                             strokeWidth={2}
                         />
                     ))}
-                    <Tooltip />
+                    <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#a8a29e' }} />
                     <Legend
                         verticalAlign="bottom"
                         align="center"
