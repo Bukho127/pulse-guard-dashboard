@@ -23,12 +23,12 @@ const RouteButton = ({ icon: Icon, selected, title }) => (
 
 const RouteSelect = () => {
   const routes = [
-    { title: 'Dashboard', path: '/', icon: FiActivity },
-    { title: 'Confirmed incidents', path: '/incidents', icon: FiCheckCircle },
-    { title: 'Pending Reports', path: '/reports', icon: FiAlertTriangle },
-    { title: 'Analysis', path: '/analysis', icon: FiBarChart2 },
-    { title: 'Heatmap', path: '/heatmap', icon: FiMap },
-    { title: 'Schedule', path: '/schedule', icon: FiCalendar },
+    { title: 'Dashboard', path: '/dashboard', icon: FiActivity, end: true },
+    { title: 'Confirmed incidents', path: '/dashboard/incidents', icon: FiCheckCircle },
+    { title: 'Pending Reports', path: '/dashboard/reports', icon: FiAlertTriangle },
+    { title: 'Analysis', path: '/dashboard/analysis', icon: FiBarChart2 },
+    { title: 'Heatmap', path: '/dashboard/heatmap', icon: FiMap },
+    { title: 'Schedule', path: '/dashboard/schedule', icon: FiCalendar },
   ]
 
   return (
@@ -37,6 +37,7 @@ const RouteSelect = () => {
         <NavLink
           key={route.path}
           to={route.path}
+          end={route.end}
           className='block'
         >
           {({ isActive }) => (

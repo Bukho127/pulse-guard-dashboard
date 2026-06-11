@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
     FiAlertTriangle,
     FiArrowUpRight,
@@ -11,18 +11,95 @@ import {
     FiSlash,
     FiX,
 } from 'react-icons/fi';
-import { incidents } from './incidentData';
+import { fetchIncidents, updateIncidentStatus } from '../../api';
 
-function RecentIncidents() {
+const normalizeIncident = (incident, index) => {
+    const id = incident.id || incident._id || incident.incident_id || `UNKNOWN-${index + 1}`;
+    const location = incident.location || incident.address || incident.city || 'Unknown location';
+    const status = incident.status || incident.state || 'Open';
+    const priority = incident.priority || incident.severity || 'Medium';
+    const date =
+        incident.date ||
+        incident.createdAt ||
+        incident.created_at ||
+        incident.reportedAt ||
+        incident.reported_at ||
+        incident.submittedAt ||
+        incident.submitted_at ||
+        incident.incident_date ||
+        incident.occurredAt ||
+        incident.occurred_at ||
+        incident.timestamp ||
+        incident.time_reported ||
+        incident.timeReported ||
+        'Unknown';
+
+    return {
+        ...incident,
+        id,
+        location,
+        status,
+        priority,
+        date,
+    };
+};
+
+function RecentIncidents({ token, incidents: propIncidents, loading: propLoading, error: propError, onIncidentStatusChange }) {
     const [selectedDate, setSelectedDate] = useState('');
     const [selectedLocation, setSelectedLocation] = useState('');
     const [openFilter, setOpenFilter] = useState(null);
     const [selectedIncident, setSelectedIncident] = useState(null);
     const [reviewDecisions, setReviewDecisions] = useState({});
+    const [localIncidents, setLocalIncidents] = useState([]);
+    const [actionError, setActionError] = useState('');
+    const [loading, setLoading] = useState(Boolean(token));
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        if (propIncidents) {
+            return
+        }
+
+        if (!token) {
+            return;
+        }
+
+        let active = true
+
+        fetchIncidents(token)
+            .then((data) => {
+                if (!active) {
+                    return
+                }
+
+                if (Array.isArray(data)) {
+                    setLocalIncidents(data.map((incident, index) => normalizeIncident(incident, index)))
+                }
+            })
+            .catch((err) => {
+                if (!active) {
+                    return
+                }
+                setError(err?.message || 'Unable to load incidents.')
+            })
+            .finally(() => {
+                if (active) {
+                    setLoading(false)
+                }
+            })
+
+        return () => {
+            active = false
+        }
+    }, [token, propIncidents])
+
+    const incidents = propIncidents ?? localIncidents
+    const isLoading = propIncidents ? propLoading : loading
+    const loadError = propIncidents ? propError : error
 
     const locations = useMemo(
         () => [...new Set(incidents.map((incident) => incident.location))].sort(),
-        []
+        [incidents]
     );
 
     const filteredIncidents = useMemo(() => {
@@ -32,7 +109,7 @@ function RecentIncidents() {
 
             return matchesDate && matchesLocation;
         });
-    }, [selectedDate, selectedLocation]);
+    }, [incidents, selectedDate, selectedLocation]);
 
     const hasActiveFilters = Boolean(selectedDate || selectedLocation);
 
@@ -42,16 +119,30 @@ function RecentIncidents() {
         setOpenFilter(null);
     };
 
-    const handleReview = (decision) => {
+    const handleReview = async (decision) => {
         if (!selectedIncident) {
             return;
         }
 
-        setReviewDecisions((currentDecisions) => ({
-            ...currentDecisions,
-            [selectedIncident.id]: decision,
-        }));
-        setSelectedIncident(null);
+        const nextStatus = decision === 'Acknowledged' ? 'Acknowledged' : 'Ignored'
+        setActionError('')
+
+        try {
+            await updateIncidentStatus(token, selectedIncident.id, nextStatus.toLowerCase())
+
+            if (typeof onIncidentStatusChange === 'function') {
+                onIncidentStatusChange(selectedIncident.id, nextStatus)
+            }
+
+            setReviewDecisions((currentDecisions) => ({
+                ...currentDecisions,
+                [selectedIncident.id]: decision,
+            }));
+            setSelectedIncident(null);
+        } catch (err) {
+            console.error('Unable to update incident status:', err)
+            setActionError(err?.message || 'Unable to update incident status. Please try again.')
+        }
     };
 
     return (
@@ -92,6 +183,23 @@ function RecentIncidents() {
                     </div>
 
                 </div>
+
+                {loadError ? (
+                    <div className='mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700'>
+                        {loadError}
+                    </div>
+                ) : null}
+
+                {actionError ? (
+                    <div className='mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700'>
+                        {actionError}
+                    </div>
+                ) : null}
+
+                {isLoading ? (
+                    <div className='mb-4 text-sm text-stone-500'>Loading recent incidents…</div>
+                ) : null}
+
                 <div className='overflow-x-auto'>
                     <table className='w-full min-w-[760px] table-auto'>
                         <TableHeader />

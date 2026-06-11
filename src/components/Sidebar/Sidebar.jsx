@@ -4,7 +4,7 @@ import Search from './Search'
 import Settings from './Settings'
 
 
-const Sidebar = () => {
+const Sidebar = ({ onSignOut }) => {
   return (
     <div >
         <div className ='overflow-y-scroll sticky top-4 h-[calc(100vh-32px-48px)]'>
@@ -12,7 +12,7 @@ const Sidebar = () => {
             <Search/>
             <RouteSelect/>
         </div>
-       <Settings/>
+       <Settings onSignOut={onSignOut} />
     </div>
   )
 }

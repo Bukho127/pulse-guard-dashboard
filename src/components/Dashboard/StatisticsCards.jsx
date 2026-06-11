@@ -1,26 +1,59 @@
+import { useEffect, useState } from 'react'
 import { FiTrendingDown, FiTrendingUp } from 'react-icons/fi';
+import { fetchIncidents } from '../../api'
 
-function StatisticsCards() {
+function StatisticsCards({ token, incidents: propIncidents }) {
+    const [localIncidents, setLocalIncidents] = useState([])
+    const incidents = propIncidents ?? localIncidents
+
+    useEffect(() => {
+        if (propIncidents) return
+        if (!token) return
+
+        let active = true
+        fetchIncidents(token)
+            .then((data) => {
+                if (!active) return
+                setLocalIncidents(Array.isArray(data) ? data : [])
+            })
+            .catch(() => {
+                if (!active) return
+                setLocalIncidents([])
+            })
+
+        return () => { active = false }
+    }, [token, propIncidents])
+
+    const total = incidents.length
+    const verified = incidents.filter((inc) => {
+        const status = String(inc.status || '').toLowerCase()
+        return ['verified', 'confirmed', 'resolved', 'closed', 'acknowledged'].some((term) => status.includes(term))
+    }).length
+    const pending = incidents.filter((inc) => {
+        const status = String(inc.status || '').toLowerCase()
+        return !['verified', 'confirmed', 'resolved', 'closed', 'acknowledged'].some((term) => status.includes(term))
+    }).length
+
     return (
         <>
             <Card
                 title="Video Reports"
-                value="1,234"
-                pillText="12.5%"
+                value={total.toLocaleString()}
+                pillText=""
                 trend="up"
                 period="Submitted in the last 30 days"
             />
             <Card
                 title="Verified Incidents"
-                value="326"
-                pillText="8.2%"
+                value={verified.toLocaleString()}
+                pillText=""
                 trend="up"
                 period="Confirmed by review team"
             />
             <Card
                 title="Pending Review"
-                value="47"
-                pillText="6.1%"
+                value={pending.toLocaleString()}
+                pillText=""
                 trend="down"
                 period="Awaiting evidence assessment"
             />

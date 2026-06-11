@@ -4,8 +4,8 @@ import TopBar from "./TopBar"
 import Grid from "./Grid"
 import Heatmap from "./Heatmap"
 
-const DashboardHome = () => (
-  <Grid />
+const DashboardHome = ({ token }) => (
+  <Grid token={token} />
 )
 
 const PlaceholderPage = ({ title }) => (
@@ -19,18 +19,19 @@ const PlaceholderPage = ({ title }) => (
   </div>
 )
 
-const Dashboard = () => {
+const Dashboard = ({ officer, token }) => {
   return (
     <main className='min-w-0 rounded-lg bg-white pb-4 shadow'>
-      <TopBar />
+      <TopBar officer={officer} token={token} />
       <Routes>
-        <Route path='/' element={<DashboardHome />} />
-        <Route path='/incidents' element={<Incidents />} />
-        <Route path='/reports' element={<PlaceholderPage title='Pending Reports' />} />
-        <Route path='/analysis' element={<PlaceholderPage title='Analysis' />} />
-        <Route path='/heatmap' element={<Heatmap />} />
-        <Route path='/schedule' element={<PlaceholderPage title='Schedule' />} />
-        <Route path='*' element={<Navigate to='/' replace />} />
+        <Route index element={<DashboardHome token={token} />} />
+        <Route path='incidents' element={<Incidents token={token} />} />
+        <Route path='reports' element={<PlaceholderPage title='Pending Reports' />} />
+        <Route path='analysis' element={<PlaceholderPage title='Analysis' />} />
+        <Route path='heatmap' element={<Heatmap token={token} />} />
+        <Route path='schedule' element={<PlaceholderPage title='Schedule' />} />
+        <Route path='settings' element={<PlaceholderPage title='Settings' />} />
+        <Route path='*' element={<Navigate to='/dashboard' replace />} />
       </Routes>
     </main>
   )

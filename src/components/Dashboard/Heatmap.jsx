@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
+import { fetchHeatmapPoints } from '../../api'
 
 const MAPBOX_ACCESS_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN
 
@@ -135,7 +136,7 @@ function HeatmapMap({
         interactive,
       })
     } catch (error) {
-      setMapError(error.message || 'Mapbox could not start.')
+      queueMicrotask(() => setMapError(error.message || 'Mapbox could not start.'))
       return
     }
 
@@ -327,7 +328,46 @@ function HeatmapMap({
   )
 }
 
-function Heatmap() {
+function Heatmap({ token }) {
+  const [heatmapPoints, setHeatmapPoints] = useState([])
+  const [heatmapLoading, setHeatmapLoading] = useState(Boolean(token))
+  const [heatmapError, setHeatmapError] = useState(null)
+
+  useEffect(() => {
+    if (!token) {
+      return
+    }
+
+    let active = true
+
+    fetchHeatmapPoints(token)
+      .then((data) => {
+        if (!active) {
+          return
+        }
+
+        if (Array.isArray(data)) {
+          setHeatmapPoints(data)
+        }
+      })
+      .catch((err) => {
+        if (!active) {
+          return
+        }
+
+        setHeatmapError(err?.message || 'Unable to load heatmap metadata.')
+      })
+      .finally(() => {
+        if (active) {
+          setHeatmapLoading(false)
+        }
+      })
+
+    return () => {
+      active = false
+    }
+  }, [token])
+
   return (
     <div className='px-4'>
       <div className='mb-4'>
@@ -335,6 +375,17 @@ function Heatmap() {
         <p className='text-sm text-stone-500'>
           Route view prepared for incident mapping. Heatmap painting is intentionally disabled.
         </p>
+        <div className='mt-3 flex flex-wrap gap-3 text-sm text-stone-600'>
+          {heatmapLoading ? (
+            'Loading heatmap data…'
+          ) : heatmapError ? (
+            <span className='rounded bg-red-50 px-3 py-2 text-red-700'>{heatmapError}</span>
+          ) : (
+            <span className='rounded bg-green-50 px-3 py-2 text-green-700'>
+              {heatmapPoints.length} incident locations loaded from the backend
+            </span>
+          )}
+        </div>
       </div>
       <HeatmapMap />
     </div>
