@@ -112,7 +112,7 @@ const Notifications = ({ token }) => {
                 }}
                 aria-label={label}
                 title={label}
-                className="relative rounded-2xl border border-stone-200 p-2 transition-colors hover:border-green-600 hover:text-green-700"
+                className="relative rounded-2xl border border-stone-200 p-2 transition-colors hover:bg-gray-100 cursor-pointer"
             >
                 <FiBell className={loading ? 'animate-pulse' : ''} />
                 {!loading && notificationCount > 0 && (
@@ -164,7 +164,7 @@ const NotificationModal = ({ error, loading, notifications, onClose }) => {
                         type="button"
                         onClick={onClose}
                         aria-label="Close notifications"
-                        className="rounded border border-stone-200 p-2 text-stone-500 transition-colors hover:border-green-600 hover:text-green-700"
+                        className="rounded border border-stone-200 p-2 text-stone-500 transition-colors hover:bg-gray-100"
                     >
                         <FiX />
                     </button>
