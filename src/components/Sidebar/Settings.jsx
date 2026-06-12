@@ -18,7 +18,7 @@ const Settings = ({ onSignOut }) => {
                     <button
                         type='button'
                         onClick={handleSignOut}
-                        className='flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-stone-600 transition-colors hover:bg-stone-100 hover:text-green-700'
+                        className='flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-stone-600 transition-colors hover:bg-stone-100 hover:text-gray-700'
                     >
                         <FiLogOut className='shrink-0 text-base' />
                         <span className='truncate'>Sign out</span>

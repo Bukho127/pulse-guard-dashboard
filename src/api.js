@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
 class ApiError extends Error {
   constructor(message, status, payload) {
@@ -104,11 +104,67 @@ export async function fetchNotificationsCount(token) {
     return data.length
   }
 
+  if (!data || typeof data !== 'object') {
+    return 0
+  }
+
   if (typeof data.count === 'number') {
     return data.count
   }
 
+  if (typeof data.unreadCount === 'number') {
+    return data.unreadCount
+  }
+
+  if (Array.isArray(data.notifications)) {
+    return data.notifications.length
+  }
+
+  if (Array.isArray(data.data)) {
+    return data.data.length
+  }
+
   return 0
+}
+
+export async function fetchUnreadNotifications(token) {
+  const data = await request('/notifications/unread', {
+    method: 'GET',
+    headers: buildHeaders(token, false),
+  })
+
+  if (Array.isArray(data)) {
+    return {
+      count: data.length,
+      notifications: data,
+    }
+  }
+
+  if (!data || typeof data !== 'object') {
+    return {
+      count: 0,
+      notifications: [],
+    }
+  }
+
+  const notifications =
+    data.notifications ||
+    data.data?.notifications ||
+    data.data ||
+    data.results ||
+    []
+
+  const count =
+    data.count ||
+    data.unreadCount ||
+    data.data?.count ||
+    data.data?.unreadCount ||
+    (Array.isArray(notifications) ? notifications.length : 0)
+
+  return {
+    count,
+    notifications: Array.isArray(notifications) ? notifications : [],
+  }
 }
 
 export async function fetchHeatmapPoints(token, startDate, endDate) {
@@ -126,5 +182,6 @@ export default {
   loginPersonnel,
   fetchIncidents,
   fetchNotificationsCount,
+  fetchUnreadNotifications,
   fetchHeatmapPoints,
 }

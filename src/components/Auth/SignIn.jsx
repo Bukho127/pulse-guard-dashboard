@@ -190,7 +190,7 @@ const SignIn = ({ officer, onSignIn }) => {
               <button
                 type='submit'
                 disabled={isSubmitting}
-               className='flex w-full items-center justify-center gap-2 rounded bg-gradient-to-b from-gray-900 to-black px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:from-gray-800 hover:to-gray-900 disabled:cursor-not-allowed disabled:bg-stone-300'>
+              className="flex w-full items-center justify-center gap-2 rounded px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:opacity-90 disabled:cursor-not-allowed disabled:bg-stone-300 bg-[linear-gradient(to_bottom,rgba(15,15,15,0.7),rgba(0,0,0,1))]">
                 <FiLock />
                 {isSubmitting ? 'Signing in…' : 'Sign in securely'}
               </button>
