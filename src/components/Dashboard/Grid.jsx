@@ -89,6 +89,7 @@ function Grid({ token }) {
                 loading={loading}
                 error={error}
                 onIncidentStatusChange={handleIncidentStatusChange}
+                token={token}
             />
         </div>
     )

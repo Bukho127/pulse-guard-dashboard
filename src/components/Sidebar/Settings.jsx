@@ -29,7 +29,7 @@ const Settings = ({ onSignOut }) => {
                 type='button'
                 onClick={() => setIsOpen((current) => !current)}
                 aria-expanded={isOpen}
-                className='flex w-full items-center gap-2 rounded border border-stone-300 bg-white px-2 py-1.5 text-left text-stone-600 transition-colors hover:bg-stone-100 hover:text-green-700'
+                className='flex w-full items-center gap-2 rounded border border-stone-300 bg-white px-2 py-1.5 text-left text-stone-600 transition-colors hover:bg-stone-100 hover:text-gray-700'
             >
                 <FiSettings className='shrink-0 text-base' />
                 <span className='truncate'>Settings</span>

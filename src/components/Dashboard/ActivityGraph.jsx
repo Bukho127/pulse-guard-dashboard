@@ -51,25 +51,41 @@ function ActivityGraph({ token, incidents: propIncidents }) {
         return () => { active = false }
     }, [token, propIncidents])
 
-    const chartData = useMemo(() => {
-        const labels = getLastSixMonths()
-        const data = labels.map((name) => ({ name, reports: 0, verified: 0 }))
+const chartData = useMemo(() => {
+    const labels = getLastSixMonths()
+    const data = labels.map((name) => ({ name, reports: 0, verified: 0 }))
 
-        incidents.forEach((incident) => {
-            const raw = incident.date || incident.createdAt || incident.created_at || incident.reportedAt || incident.reported_at || incident.submittedAt || incident.submitted_at || incident.incident_date || incident.occurredAt || incident.occurred_at || incident.timestamp || incident.time_reported || incident.timeReported || null
-            const d = raw ? new Date(raw) : null
-            if (!d || Number.isNaN(d.getTime())) return
-            const label = MONTH_NAMES[d.getMonth()]
-            const idx = labels.indexOf(label)
-            if (idx === -1) return
-            const status = String(incident.status || '').toLowerCase()
-            const isVerified = ['verified', 'confirmed', 'resolved', 'closed'].some((term) => status.includes(term))
-            data[idx].reports += 1
-            if (isVerified) data[idx].verified += 1
-        })
+    incidents.forEach((incident) => {
+        // Get the status
+        const status = String(incident.status || '').toLowerCase()
+        const isVerified = status === 'acknowledged' || status === 'resolved'
+        
+        // REPORTS always use creation date
+        let reportDate = incident.date || incident.createdAt || incident.created_at || incident.reportedAt || incident.reported_at || incident.submittedAt || incident.submitted_at || incident.incident_date || incident.occurredAt || incident.occurred_at || incident.timestamp || incident.time_reported || incident.timeReported || null
+        const reportD = reportDate ? new Date(reportDate) : null
+        if (!reportD || Number.isNaN(reportD.getTime())) return
+        
+        const reportLabel = MONTH_NAMES[reportD.getMonth()]
+        const reportIdx = labels.indexOf(reportLabel)
+        if (reportIdx === -1) return
+        
+        data[reportIdx].reports += 1
+        
+        // VERIFIED uses updated date if available
+        if (isVerified && incident.updated_at) {
+            const verifyDate = new Date(incident.updated_at)
+            if (!Number.isNaN(verifyDate.getTime())) {
+                const verifyLabel = MONTH_NAMES[verifyDate.getMonth()]
+                const verifyIdx = labels.indexOf(verifyLabel)
+                if (verifyIdx !== -1) {
+                    data[verifyIdx].verified += 1
+                }
+            }
+        }
+    })
 
-        return data
-    }, [incidents])
+    return data
+}, [incidents])
 
     return (
         <div className='col-span-12 overflow-hidden rounded border border-stone-300 xl:col-span-8'>
