@@ -46,8 +46,6 @@ async function request(path, options = {}) {
   return parseResponse(response)
 }
 
-
-
 export async function loginPersonnel(payload) {
   const body = JSON.stringify(payload)
   console.log('Payload being sent:', payload)
@@ -167,14 +165,77 @@ export async function fetchUnreadNotifications(token) {
   }
 }
 
-export async function fetchHeatmapPoints(token, startDate, endDate) {
-  const query = startDate && endDate ? `?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}` : ''
-  const data = await request(`/heatmap${query}`, {
+/**
+ * Fetch all heatmap data
+ * @param {string} token - Authentication token
+ * @returns {Promise<Object>} Heatmap data with H3 hexagon features and metadata
+ */
+export async function fetchHeatmapPoints(token) {
+  const data = await request('/heatmap', {
     method: 'GET',
     headers: buildHeaders(token, false),
   })
 
-  return data?.heatmap || data || []
+  // Handle response format
+  if (data?.type === 'heatmap' && data?.features) {
+    return data
+  }
+
+  // Backward compatibility for old format
+  return data?.heatmap || data || { features: [], metadata: {} }
+}
+
+/**
+ * Fetch heatmap data for a specific month
+ * @param {string} token - Authentication token
+ * @param {string} month - Month in YYYY-MM format (e.g., "2026-06")
+ * @returns {Promise<Object>} Heatmap data with H3 hexagon features
+ */
+export async function fetchHeatmapByMonth(token, month) {
+  if (!month || !month.match(/^\d{4}-\d{2}$/)) {
+    throw new Error('Invalid month format. Use YYYY-MM')
+  }
+
+  const query = `?month=${encodeURIComponent(month)}`
+  const data = await request(`/heatmap/month${query}`, {
+    method: 'GET',
+    headers: buildHeaders(token, false),
+  })
+
+  // Handle response format
+  if (data?.type === 'heatmap' && data?.features) {
+    return data
+  }
+
+  // Backward compatibility
+  return data?.heatmap || data || { features: [], metadata: {} }
+}
+
+/**
+ * Fetch heatmap data for a date range
+ * @param {string} token - Authentication token
+ * @param {string} startDate - Start date in YYYY-MM-DD format
+ * @param {string} endDate - End date in YYYY-MM-DD format
+ * @returns {Promise<Object>} Heatmap data with H3 hexagon features
+ */
+export async function fetchHeatmapByDateRange(token, startDate, endDate) {
+  if (!startDate || !endDate) {
+    throw new Error('startDate and endDate are required (YYYY-MM-DD format)')
+  }
+
+  const query = `?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`
+  const data = await request(`/heatmap/range${query}`, {
+    method: 'GET',
+    headers: buildHeaders(token, false),
+  })
+
+  // Handle response format
+  if (data?.type === 'heatmap' && data?.features) {
+    return data
+  }
+
+  // Backward compatibility
+  return data?.heatmap || data || { features: [], metadata: {} }
 }
 
 export default {
@@ -184,4 +245,6 @@ export default {
   fetchNotificationsCount,
   fetchUnreadNotifications,
   fetchHeatmapPoints,
+  fetchHeatmapByMonth,
+  fetchHeatmapByDateRange,
 }

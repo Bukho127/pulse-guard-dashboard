@@ -28,7 +28,7 @@ const Dashboard = ({ officer, token }) => {
         <Route path='incidents' element={<Incidents token={token} />} />
         <Route path='reports' element={<PlaceholderPage title='Pending Reports' />} />
         <Route path='analysis' element={<PlaceholderPage title='Analysis' />} />
-        <Route path='heatmap' element={<Heatmap token={token} />} />
+        <Route path='heatmap' element={<Heatmap token={token} month="2026-06" />} />
         <Route path='schedule' element={<PlaceholderPage title='Schedule' />} />
         <Route path='settings' element={<PlaceholderPage title='Settings' />} />
         <Route path='*' element={<Navigate to='/dashboard' replace />} />
