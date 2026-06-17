@@ -19,6 +19,7 @@ async function parseResponse(response) {
     data = text
   }
 
+
   if (!response.ok) {
     const message = data?.message || response.statusText || 'API request failed'
     throw new ApiError(message, response.status, data)
@@ -46,6 +47,78 @@ async function request(path, options = {}) {
   return parseResponse(response)
 }
 
+function normalizePagination(pagination = {}, incidentCount = 0) {
+  if (!pagination || typeof pagination !== 'object') {
+    return null
+  }
+
+  const page = Number(
+    pagination.page ??
+      pagination.currentPage ??
+      pagination.current_page ??
+      pagination.pageNumber ??
+      1
+  )
+  const pages = Number(
+    pagination.pages ??
+      pagination.totalPages ??
+      pagination.total_pages ??
+      pagination.pageCount ??
+      1
+  )
+  const total = Number(
+    pagination.total ??
+      pagination.totalItems ??
+      pagination.total_items ??
+      pagination.count ??
+      incidentCount
+  )
+
+  return {
+    ...pagination,
+    page,
+    pages,
+    total,
+    hasPrev:
+      pagination.hasPrev ??
+      pagination.hasPreviousPage ??
+      pagination.has_previous_page ??
+      page > 1,
+    hasNext:
+      pagination.hasNext ??
+      pagination.hasNextPage ??
+      pagination.has_next_page ??
+      page < pages,
+  }
+}
+
+function normalizeIncidentsResponse(response) {
+  if (Array.isArray(response)) {
+    return {
+      incidents: response,
+      pagination: null,
+    }
+  }
+
+  const incidents =
+    response?.incidents ||
+    response?.results ||
+    response?.data?.incidents ||
+    response?.data?.results ||
+    response?.data ||
+    []
+
+  const normalizedIncidents = Array.isArray(incidents) ? incidents : []
+  const pagination =
+    normalizePagination(response?.pagination, normalizedIncidents.length) ||
+    normalizePagination(response?.data?.pagination, normalizedIncidents.length)
+
+  return {
+    incidents: normalizedIncidents,
+    pagination,
+  }
+}
+
 export async function loginPersonnel(payload) {
   const body = JSON.stringify(payload)
   console.log('Payload being sent:', payload)
@@ -58,26 +131,73 @@ export async function loginPersonnel(payload) {
   })
 }
 
-export async function fetchIncidents(token) {
+export async function fetchIncidents(token, page, limit) {
   console.log('fetchIncidents called with token:', token ? 'present' : 'missing')
   const headers = buildHeaders(token, false)
   console.log('fetchIncidents headers:', headers)
 
   try {
-    const data = await request('/incidents', {
+    const query =
+      page && limit
+        ? `?page=${encodeURIComponent(page)}&limit=${encodeURIComponent(limit)}`
+        : ''
+
+    const response = await request(`/incidents${query}`, {
       method: 'GET',
       headers,
     })
 
-    const incidents = Array.isArray(data)
-      ? data
-      : data?.incidents || data?.data?.incidents || data?.results || []
-
-    return Array.isArray(incidents) ? incidents : []
+    return normalizeIncidentsResponse(response)
   } catch (err) {
     console.error('fetchIncidents error:', err.status, err.message, err.payload)
     throw err
   }
+}
+
+export async function fetchAllIncidents(token) {
+  try {
+    const response = await request('/incidents/all', {
+      method: 'GET',
+      headers: buildHeaders(token, false),
+    })
+
+    return normalizeIncidentsResponse(response).incidents
+  } catch (err) {
+    if (err.status !== 404) {
+      throw err
+    }
+  }
+
+  const firstPage = await fetchIncidents(token)
+  const incidents = [...firstPage.incidents]
+  const pagination = firstPage.pagination
+
+  if (!pagination?.pages || pagination.pages <= 1) {
+    return incidents
+  }
+
+  const limit =
+    pagination.limit ||
+    pagination.perPage ||
+    pagination.per_page ||
+    pagination.pageSize ||
+    pagination.page_size ||
+    firstPage.incidents.length ||
+    10
+  const remainingPages = Array.from(
+    { length: pagination.pages - pagination.page },
+    (_, index) => pagination.page + index + 1
+  )
+
+  const responses = await Promise.all(
+    remainingPages.map((page) => fetchIncidents(token, page, limit))
+  )
+
+  responses.forEach((response) => {
+    incidents.push(...response.incidents)
+  })
+
+  return incidents
 }
 
 export async function updateIncidentStatus(token, incidentId, status) {
@@ -242,6 +362,7 @@ export default {
   API_BASE_URL,
   loginPersonnel,
   fetchIncidents,
+  fetchAllIncidents,
   fetchNotificationsCount,
   fetchUnreadNotifications,
   fetchHeatmapPoints,

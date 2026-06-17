@@ -2,17 +2,15 @@ import { useEffect, useMemo, useState } from 'react';
 import {
     FiAlertTriangle,
     FiArrowUpRight,
-    FiCheckCircle,
     FiChevronDown,
     FiEdit,
     FiFilter,
-    FiMapPin,
-    FiPlayCircle,
-    FiSlash,
     FiX,
 } from 'react-icons/fi';
 import { fetchIncidents, updateIncidentStatus } from '../../api';
 import IncidentReviewModal from './IncidentReviewWindow';
+
+const RECENT_INCIDENT_LIMIT = 10
 
 const normalizeIncident = (incident, index) => {
     const id = incident.id || incident._id || incident.incident_id || `UNKNOWN-${index + 1}`;
@@ -45,7 +43,13 @@ const normalizeIncident = (incident, index) => {
     };
 };
 
-function RecentIncidents({ token, incidents: propIncidents, loading: propLoading, error: propError, onIncidentStatusChange }) {
+function RecentIncidents({
+    token,
+    incidents: propIncidents,
+    loading: propLoading,
+    error: propError,
+    onIncidentStatusChange,
+}) {
     const [selectedDate, setSelectedDate] = useState('');
     const [selectedLocation, setSelectedLocation] = useState('');
     const [openFilter, setOpenFilter] = useState(null);
@@ -67,15 +71,18 @@ function RecentIncidents({ token, incidents: propIncidents, loading: propLoading
 
         let active = true
 
-        fetchIncidents(token)
+        fetchIncidents(token, 1, RECENT_INCIDENT_LIMIT)
             .then((data) => {
                 if (!active) {
                     return
                 }
 
-                if (Array.isArray(data)) {
-                    setLocalIncidents(data.map((incident, index) => normalizeIncident(incident, index)))
-                }
+                const incidentList = Array.isArray(data) ? data : data?.incidents || []
+                setLocalIncidents(
+                    Array.isArray(incidentList)
+                        ? incidentList.map((incident, index) => normalizeIncident(incident, index))
+                        : []
+                )
             })
             .catch((err) => {
                 if (!active) {

@@ -3,7 +3,7 @@ import StatisticsCards from './StatisticsCards'
 import ActivityGraph from './ActivityGraph'
 import RadarCharts from './RadarChart'
 import RecentIncidents from './RecentIncidents'
-import { fetchIncidents } from '../../api'
+import { fetchAllIncidents } from '../../api'
 
 const normalizeIncident = (incident, index) => {
     const id = incident.id || incident._id || incident.incident_id || `UNKNOWN-${index + 1}`
@@ -38,15 +38,13 @@ const normalizeIncident = (incident, index) => {
 
 function Grid({ token }) {
     const [incidents, setIncidents] = useState([])
-    const [loading, setLoading] = useState(Boolean(token))
-    const [error, setError] = useState('')
 
     useEffect(() => {
         if (!token) return
 
         let active = true
 
-        fetchIncidents(token)
+        fetchAllIncidents(token)
             .then((data) => {
                 if (!active) return
 
@@ -57,13 +55,8 @@ function Grid({ token }) {
             })
             .catch((err) => {
                 if (!active) return
-                setError(err?.message || 'Unable to load incidents.')
+                console.error('Unable to load dashboard incidents:', err)
                 setIncidents([])
-            })
-            .finally(() => {
-                if (active) {
-                    setLoading(false)
-                }
             })
 
         return () => {
@@ -85,9 +78,6 @@ function Grid({ token }) {
             <ActivityGraph incidents={incidents} />
             <RadarCharts incidents={incidents} />
             <RecentIncidents
-                incidents={incidents}
-                loading={loading}
-                error={error}
                 onIncidentStatusChange={handleIncidentStatusChange}
                 token={token}
             />

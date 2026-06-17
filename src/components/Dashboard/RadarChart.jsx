@@ -11,7 +11,7 @@ import {
     ResponsiveContainer,
 } from "recharts";
 import ChartTooltip from './ChartTooltip';
-import { fetchIncidents } from '../../api'
+import { fetchAllIncidents } from '../../api'
 
 const DEFAULT_COLORS = ['#57B74A', '#2563eb', '#d97706', '#7c3aed', '#ec4899', '#14b8a6']
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -41,7 +41,7 @@ function RadarCharts({ token, incidents: propIncidents }) {
 
         if (!token) return
         let active = true
-        fetchIncidents(token)
+        fetchAllIncidents(token)
             .then((data) => {
                 if (!active) return
                 setLocalIncidents(Array.isArray(data) ? data : [])

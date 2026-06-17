@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { FiTrendingDown, FiTrendingUp } from 'react-icons/fi';
-import { fetchIncidents } from '../../api'
+import { fetchAllIncidents } from '../../api'
 
 function StatisticsCards({ token, incidents: propIncidents }) {
     const [localIncidents, setLocalIncidents] = useState([])
@@ -11,7 +11,7 @@ function StatisticsCards({ token, incidents: propIncidents }) {
         if (!token) return
 
         let active = true
-        fetchIncidents(token)
+        fetchAllIncidents(token)
             .then((data) => {
                 if (!active) return
                 setLocalIncidents(Array.isArray(data) ? data : [])
