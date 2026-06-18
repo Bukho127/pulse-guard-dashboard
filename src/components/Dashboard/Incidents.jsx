@@ -44,6 +44,7 @@ function Incidents({ token: propToken }) {
 
       try {
         const result = await fetchIncidents(token, currentPage, limit)
+        console.log('API result:', result)
         setIncidents(result.incidents)
         setPagination(result.pagination)
       } catch (err) {
@@ -144,6 +145,7 @@ function Incidents({ token: propToken }) {
             })}
           </div>
 
+
           {/* Pagination Controls */}
           {pagination && pagination.pages > 1 && (
             <div className='mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
@@ -151,7 +153,7 @@ function Incidents({ token: propToken }) {
                 Page {pagination.page} of {pagination.pages} ({pagination.total} total incidents)
               </div>
               <div className='flex gap-2'>
-                this is pagination
+              
                 <button
                   type='button'
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
-import { fetchHeatmapPoints, fetchHeatmapByMonth } from '../../api'
+import { fetchHeatmapPoints, fetchHeatmapByMonth, fetchOSRMRoute } from '../../api'
 
 const MAPBOX_ACCESS_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN
 

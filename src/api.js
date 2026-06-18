@@ -331,6 +331,22 @@ export async function fetchHeatmapByMonth(token, month) {
   return data?.heatmap || data || { features: [], metadata: {} }
 }
 
+
+//fetch OSMR data for a route between two points
+export async function fetchOSRMRoute(startLat, startLng, endLat, endLng) {
+  const response = await fetch(`http://localhost:5000/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?geometries=geojson&overview=full`
+  ); 
+  if (!response.ok) {
+    throw new Error(`OSMR request failed with status ${response.status}`)
+  }
+
+  const data = await response.json()
+  if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
+    throw new Error(`OSMR response error: ${data.code} `)
+  }
+  return data.routes[0].geometry.coordinates
+}
+
 /**
  * Fetch heatmap data for a date range
  * @param {string} token - Authentication token

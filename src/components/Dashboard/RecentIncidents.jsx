@@ -3,6 +3,8 @@ import {
     FiAlertTriangle,
     FiArrowUpRight,
     FiChevronDown,
+    FiChevronLeft,  // 👈 added
+    FiChevronRight, // 👈 added
     FiEdit,
     FiFilter,
     FiX,
@@ -56,6 +58,8 @@ function RecentIncidents({
     const [selectedIncident, setSelectedIncident] = useState(null);
     const [reviewDecisions, setReviewDecisions] = useState({});
     const [localIncidents, setLocalIncidents] = useState([]);
+    const [pagination, setPagination] = useState(null);        // 👈 added
+    const [currentPage, setCurrentPage] = useState(1);         // 👈 added
     const [actionError, setActionError] = useState('');
     const [loading, setLoading] = useState(Boolean(token));
     const [error, setError] = useState('');
@@ -70,8 +74,9 @@ function RecentIncidents({
         }
 
         let active = true
+        setLoading(true) // 👈 reset on every page change
 
-        fetchIncidents(token, 1, RECENT_INCIDENT_LIMIT)
+        fetchIncidents(token, currentPage, RECENT_INCIDENT_LIMIT) // 👈 use currentPage
             .then((data) => {
                 if (!active) {
                     return
@@ -83,6 +88,7 @@ function RecentIncidents({
                         ? incidentList.map((incident, index) => normalizeIncident(incident, index))
                         : []
                 )
+                setPagination(data?.pagination || null) // 👈 save pagination
             })
             .catch((err) => {
                 if (!active) {
@@ -99,7 +105,7 @@ function RecentIncidents({
         return () => {
             active = false
         }
-    }, [token, propIncidents])
+    }, [token, propIncidents, currentPage]) // 👈 added currentPage dependency
 
     const incidents = propIncidents ?? localIncidents
     const isLoading = propIncidents ? propLoading : loading
@@ -189,7 +195,6 @@ function RecentIncidents({
                             </button>
                         ) : null}
                     </div>
-
                 </div>
 
                 {loadError ? (
@@ -229,6 +234,37 @@ function RecentIncidents({
                         </div>
                     ) : null}
                 </div>
+
+                {/* 👇 Pagination — added below the table */}
+                {pagination && pagination.pages > 1 ? (
+                    <div className='mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+                        <div className='text-sm text-stone-500'>
+                            Page {pagination.page} of {pagination.pages} ({pagination.total} total incidents)
+                        </div>
+                        <div className='flex gap-2'>
+                            <button
+                                type='button'
+                                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                disabled={!pagination.hasPrev || isLoading}
+                                aria-label='Previous incidents page'
+                                className='inline-flex min-h-10 items-center gap-2 rounded border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-950 transition-colors hover:border-green-600 hover:text-green-600 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-stone-300 disabled:hover:text-stone-950'
+                            >
+                                <FiChevronLeft className='shrink-0' />
+                                Previous
+                            </button>
+                            <button
+                                type='button'
+                                onClick={() => setCurrentPage((p) => p + 1)}
+                                disabled={!pagination.hasNext || isLoading}
+                                aria-label='Next incidents page'
+                                className='inline-flex min-h-10 items-center gap-2 rounded border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-950 transition-colors hover:border-green-600 hover:text-green-600 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-stone-300 disabled:hover:text-stone-950'
+                            >
+                                Next
+                                <FiChevronRight className='shrink-0' />
+                            </button>
+                        </div>
+                    </div>
+                ) : null}
             </div>
 
             {selectedIncident ? (
@@ -241,9 +277,9 @@ function RecentIncidents({
             ) : null}
         </>
     )
-
 }
 
+// ... all subcomponents below remain completely unchanged
 const LocationDropdown = ({ locations, open, selectedLocation, setOpen, setSelectedLocation }) => {
     const chooseLocation = (location) => {
         setSelectedLocation(location);
@@ -323,7 +359,6 @@ const TableHeader = () => {
             </tr>
         </thead>
     )
-
 }
 
 const statusStyles = {
