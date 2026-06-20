@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { FiLock } from 'react-icons/fi'
+import { FiLock, FiEyeOff, FiEye } from 'react-icons/fi'
 import { loginPersonnel } from '../../api'
 import logo from '../../assets/images/logo/logo-pulse-guard.svg'
 
@@ -25,10 +25,13 @@ const AuthField = ({
   placeholder,
   type = 'text',
   value,
+  icon,
+  onClickIcon,
 }) => {
   return (
     <label className='block'>
       <span className='mb-1 block text-sm font-medium text-stone-700'>{label}</span>
+      <div className='relative'>
       <input
         type={type}
         value={value}
@@ -37,9 +40,21 @@ const AuthField = ({
         inputMode={inputMode}
         maxLength={maxLength}
         placeholder={placeholder}
-        className='w-full rounded border border-stone-300 bg-white px-3 py-2 text-sm text-stone-950 outline-none transition-colors duration-200 placeholder:text-stone-400 hover:border-green-600 focus:border-green-600'
+        icon={icon}
+        className='w-full rounded border border-stone-300 bg-white px-3 py-2 text-sm text-stone-950 outline-none transition-colors duration-200 placeholder:text-stone-400 hover:border-green-600 focus:border-green-600 pr-10'
       />
+         {icon && (
+          <button
+            type='button'
+            onClick={onClickIcon}
+            className='absolute right-3 top-1/2 -translate-y-1/2 text-stone-500 hover:text-stone-700'
+          >
+            {icon}
+          </button>
+        )}
+      </div>
     </label>
+    
   )
 }
 
@@ -53,6 +68,7 @@ const SignIn = ({ officer, onSignIn }) => {
   })
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [visible, setVisible]= useState(false)
 
   const updateField = (field, value) => {
     const nextValue = field === 'forceNumber' ? formatForceNumber(value) : value
@@ -175,12 +191,14 @@ const SignIn = ({ officer, onSignIn }) => {
 
               <AuthField
                 label='Password'
-                type='password'
+                type={visible ?"text":"password"}
                 value={formData.password}
                 onChange={(value) => updateField('password', value)}
                 autoComplete='current-password'
+                icon={visible ? <FiEyeOff /> : <FiEye />}
+                onClickIcon={() => setVisible(!visible)}
               />
-
+              
               {error ? (
                 <p className='rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700'>
                   {error}

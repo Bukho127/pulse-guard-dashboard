@@ -1,4 +1,4 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001'
 
 class ApiError extends Error {
   constructor(message, status, payload) {
@@ -333,18 +333,26 @@ export async function fetchHeatmapByMonth(token, month) {
 
 
 //fetch OSMR data for a route between two points
-export async function fetchOSRMRoute(startLat, startLng, endLat, endLng) {
-  const response = await fetch(`http://localhost:5000/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?geometries=geojson&overview=full`
-  ); 
+export async function fetchOSRMRoute(startLng, startLat, endLng, endLat, token) {
+  const response = await fetch(
+    `http://localhost:5001/heatmap/route?startLng=${startLng}&startLat=${startLat}&endLng=${endLng}&endLat=${endLat}`,
+    {
+      method: 'GET',
+      headers: buildHeaders(token, false),
+    }
+  );
+  console.log('OSRM response status:', response.status)
+
   if (!response.ok) {
-    throw new Error(`OSMR request failed with status ${response.status}`)
+    throw new Error(`OSRM request failed with status ${response.status}`)
+    console.error('OSRM request failed:', {
+      status: response.status,
+      statusText: response.statusText,
+      url: response.url,
+    })
   }
 
-  const data = await response.json()
-  if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
-    throw new Error(`OSMR response error: ${data.code} `)
-  }
-  return data.routes[0].geometry.coordinates
+  return response.json() // backend already returns geometry directly, no further parsing needed
 }
 
 /**

@@ -1,14 +1,19 @@
-/* HeatmapMap Component. this still needs work */
+/* HeatmapMap Component */
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { fetchHeatmapPoints, fetchHeatmapByMonth, fetchOSRMRoute } from '../../api'
 
+// ==================== CONSTANTS ====================
 const MAPBOX_ACCESS_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN
-
 const DEFAULT_CENTER = [18.4241, -33.9249]
-const DEMO_ROUTE_COORDINATES = [
+
+// Hardcoded Cape Town route: CBD → Claremont
+const OSRM_START = { lng: 18.4241, lat: -33.9249 }
+const OSRM_END = { lng: 18.4655, lat: -33.9645 }
+
+const FALLBACK_ROUTE_COORDINATES = [
   [18.4241, -33.9249],
   [18.4386, -33.9322],
   [18.4611, -33.9429],
@@ -18,6 +23,7 @@ const DEMO_ROUTE_COORDINATES = [
 
 mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN
 
+// ==================== HELPERS ====================
 function createRouteFeature(coordinates) {
   return {
     type: 'Feature',
@@ -55,15 +61,9 @@ function fitRouteBounds(map, coordinates) {
     (nextBounds, coordinate) => nextBounds.extend(coordinate),
     new mapboxgl.LngLatBounds(coordinates[0], coordinates[0])
   )
-
-  map.fitBounds(bounds, {
-    padding: 72,
-    duration: 900,
-    maxZoom: 13,
-  })
+  map.fitBounds(bounds, { padding: 72, duration: 900, maxZoom: 13 })
 }
 
-// Convert H3 heatmap data to GeoJSON format for Mapbox
 function convertHeatmapToGeoJSON(heatmapFeatures) {
   return {
     type: 'FeatureCollection',
@@ -74,7 +74,7 @@ function convertHeatmapToGeoJSON(heatmapFeatures) {
         coordinates: [
           [
             ...feature.boundary.map((b) => [b.lng, b.lat]),
-            [feature.boundary[0].lng, feature.boundary[0].lat], // Close polygon
+            [feature.boundary[0].lng, feature.boundary[0].lat],
           ],
         ],
       },
@@ -88,9 +88,10 @@ function convertHeatmapToGeoJSON(heatmapFeatures) {
   }
 }
 
+// ==================== HEATMAP MAP ====================
 function HeatmapMap({
   heatmapData = null,
-  routeCoordinates = DEMO_ROUTE_COORDINATES,
+  routeCoordinates = FALLBACK_ROUTE_COORDINATES,
   routeAnimationDuration = 1900,
   showRoute = true,
   showHeatmap = true,
@@ -103,6 +104,7 @@ function HeatmapMap({
   const mapContainerRef = useRef(null)
   const mapRef = useRef(null)
   const frameRef = useRef(null)
+  const mapLoadedRef = useRef(false)
   const [centerCoordinate, setCenterCoordinate] = useState(DEFAULT_CENTER)
   const [isLocating, setIsLocating] = useState(canUseGeolocation)
   const [locationStatus, setLocationStatus] = useState(
@@ -112,10 +114,12 @@ function HeatmapMap({
   const [hoveredFeature, setHoveredFeature] = useState(null)
 
   const hasRoute = showRoute && routeCoordinates.length > 1
+
   const routeOriginShape = useMemo(
     () => createRoutePointFeature(routeCoordinates[0] ?? DEFAULT_CENTER, 'origin'),
     [routeCoordinates]
   )
+
   const routeDestinationShape = useMemo(
     () =>
       createRoutePointFeature(
@@ -126,33 +130,13 @@ function HeatmapMap({
   )
 
   const heatmapGeoJSON = useMemo(() => {
-    console.log('useMemo running')
-    console.log('heatmapData:', heatmapData)
-    console.log('typeof heatmapData:', typeof heatmapData)
-    console.log('heatmapData?.features:', heatmapData?.features)
-    console.log('Array.isArray(heatmapData?.features):', Array.isArray(heatmapData?.features))
-
-    if (!heatmapData) {
-      console.log('heatmapData is falsy')
-      return null
-    }
-
-    if (!Array.isArray(heatmapData.features)) {
-      console.log('features is not array, type:', typeof heatmapData.features)
-      return null
-    }
-
-    console.log(' Converting', heatmapData.features.length, 'features')
-    const geojson = convertHeatmapToGeoJSON(heatmapData.features)
-    console.log(' GeoJSON created:', geojson)
-    return geojson
+    if (!heatmapData || !Array.isArray(heatmapData.features)) return null
+    return convertHeatmapToGeoJSON(heatmapData.features)
   }, [heatmapData])
 
   // Geolocation
   useEffect(() => {
-    if (!canUseGeolocation) {
-      return undefined
-    }
+    if (!canUseGeolocation) return undefined
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -170,11 +154,9 @@ function HeatmapMap({
     )
   }, [canUseGeolocation, zoomLevel])
 
-  // Initialize map
+  // Initialize map — only once, no route coordinates in deps
   useEffect(() => {
-    if (!MAPBOX_ACCESS_TOKEN || !mapContainerRef.current || mapRef.current) {
-      return
-    }
+    if (!MAPBOX_ACCESS_TOKEN || !mapContainerRef.current || mapRef.current) return
 
     let map
 
@@ -194,6 +176,7 @@ function HeatmapMap({
     }
 
     mapRef.current = map
+    mapLoadedRef.current = false
     setMapError(null)
     requestAnimationFrame(() => map.resize())
 
@@ -214,57 +197,49 @@ function HeatmapMap({
     }
 
     map.on('error', (event) => {
-      const message =
+      setMapError(
         event?.error?.message ||
         event?.error?.statusText ||
         'Mapbox could not load the map style.'
-      setMapError(message)
+      )
     })
 
     map.on('load', () => {
       map.resize()
+      mapLoadedRef.current = true
 
-      // Add route layer if needed
-      if (hasRoute) {
+      if (showRoute) {
+        // Add sources with fallback — updated later by the route useEffect
         map.addSource('animated-route-source', {
           type: 'geojson',
-          data: createRouteFeature([routeCoordinates[0]]),
+          data: createRouteFeature([FALLBACK_ROUTE_COORDINATES[0]]),
         })
         map.addSource('route-origin-source', {
           type: 'geojson',
-          data: routeOriginShape,
+          data: createRoutePointFeature(FALLBACK_ROUTE_COORDINATES[0], 'origin'),
         })
         map.addSource('route-destination-source', {
           type: 'geojson',
-          data: routeDestinationShape,
+          data: createRoutePointFeature(
+            FALLBACK_ROUTE_COORDINATES[FALLBACK_ROUTE_COORDINATES.length - 1],
+            'destination'
+          ),
         })
 
         map.addLayer({
           id: 'animated-route-glow',
           type: 'line',
           source: 'animated-route-source',
-          paint: {
-            'line-color': 'rgba(87, 190, 71, 0.24)',
-            'line-width': 12,
-          },
-          layout: {
-            'line-cap': 'round',
-            'line-join': 'round',
-          },
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint: { 'line-color': 'rgba(87, 190, 71, 0.24)', 'line-width': 12 },
         })
 
         map.addLayer({
           id: 'animated-route-line',
           type: 'line',
           source: 'animated-route-source',
-          paint: {
-            'line-color': '#57BE47',
-            'line-width': 5,
-          },
-          layout: {
-            'line-cap': 'round',
-            'line-join': 'round',
-          },
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint: { 'line-color': '#57BE47', 'line-width': 5 },
         })
 
         map.addLayer({
@@ -290,41 +265,88 @@ function HeatmapMap({
             'circle-stroke-width': 3,
           },
         })
-
-        fitRouteBounds(map, routeCoordinates)
       }
     })
 
     return () => {
-      if (frameRef.current) {
-        cancelAnimationFrame(frameRef.current)
-      }
+      if (frameRef.current) cancelAnimationFrame(frameRef.current)
+      mapLoadedRef.current = false
       map.remove()
       mapRef.current = null
     }
-  }, [
-    centerCoordinate,
-    hasRoute,
-    interactive,
-    routeCoordinates,
-    routeDestinationShape,
-    routeOriginShape,
-    showUserLocation,
-    zoomLevel,
-  ])
+  }, [centerCoordinate, interactive, showRoute, showUserLocation, zoomLevel])
 
-  // Add heatmap layers when GeoJSON is ready (SEPARATE useEffect)
+  // Update route sources and trigger animation when routeCoordinates change
   useEffect(() => {
-    if (!mapRef.current || !showHeatmap || !heatmapGeoJSON) {
-      console.log('Waiting for: map=', !!mapRef.current, 'showHeatmap=', showHeatmap, 'geojson=', !!heatmapGeoJSON)
-      return
+    console.log("Route effect fired");
+    console.log("hasRoute:", hasRoute);
+    console.log("routeCoordinates:", routeCoordinates.length);
+    if (!hasRoute) return
+
+    const applyRoute = () => {
+      const map = mapRef.current
+      if (!map) return
+
+      const source = map.getSource('animated-route-source')
+      console.log("Source:", source);
+      console.log("Map loaded:", map.isStyleLoaded());
+      console.log("Coordinates:", routeCoordinates.length);
+      const originSource = map.getSource('route-origin-source')
+      const destSource = map.getSource('route-destination-source')
+
+      if (!source) return
+
+      // Reset sources to new coordinates
+      source.setData(createRouteFeature([routeCoordinates[0]]))
+      if (originSource) originSource.setData(routeOriginShape)
+      if (destSource) destSource.setData(routeDestinationShape)
+
+      fitRouteBounds(map, routeCoordinates)
+
+      // Cancel any existing animation
+      if (frameRef.current) cancelAnimationFrame(frameRef.current)
+
+      // Start fresh animation
+      const startedAt = Date.now()
+      const animate = () => {
+        const elapsed = Date.now() - startedAt
+        const progress = Math.min(elapsed / routeAnimationDuration, 1)
+        const animSource = mapRef.current?.getSource('animated-route-source')
+
+        if (animSource && 'setData' in animSource) {
+          animSource.setData(
+            createRouteFeature(buildAnimatedRouteCoordinates(routeCoordinates, progress))
+          )
+        }
+
+        if (progress < 1) {
+          frameRef.current = requestAnimationFrame(animate)
+        }
+      }
+
+      frameRef.current = requestAnimationFrame(animate)
     }
+
+    // If map already loaded apply immediately, otherwise wait
+    if (mapLoadedRef.current) {
+      applyRoute()
+    } else {
+      const map = mapRef.current
+      if (map) map.once('load', applyRoute)
+    }
+
+    return () => {
+      if (frameRef.current) cancelAnimationFrame(frameRef.current)
+    }
+  }, [routeCoordinates, hasRoute, routeAnimationDuration, routeOriginShape, routeDestinationShape])
+
+  // Heatmap layers
+  useEffect(() => {
+    if (!mapRef.current || !showHeatmap || !heatmapGeoJSON) return
 
     const map = mapRef.current
 
-    // Wait for map to be loaded
     if (!map.isStyleLoaded()) {
-      console.log('Map not yet loaded, waiting...')
       map.once('load', () => addHeatmapLayers(map))
       return
     }
@@ -332,14 +354,10 @@ function HeatmapMap({
     addHeatmapLayers(map)
 
     function addHeatmapLayers(mapInstance) {
-      // Check if source already exists
       if (mapInstance.getSource('h3-heatmap-source')) {
-        console.log('Updating heatmap data')
         mapInstance.getSource('h3-heatmap-source').setData(heatmapGeoJSON)
         return
       }
-
-      console.log('Adding heatmap source and layers')
 
       mapInstance.addSource('h3-heatmap-source', {
         type: 'geojson',
@@ -360,14 +378,9 @@ function HeatmapMap({
         id: 'h3-heatmap-outline',
         type: 'line',
         source: 'h3-heatmap-source',
-        paint: {
-          'line-color': '#fff',
-          'line-width': 0.5,
-          'line-opacity': 0.5,
-        },
+        paint: { 'line-color': '#fff', 'line-width': 0.5, 'line-opacity': 0.5 },
       })
 
-      // Hover effects
       mapInstance.on('mousemove', 'h3-heatmap-fill', (e) => {
         if (e.features.length > 0) {
           mapInstance.getCanvas().style.cursor = 'pointer'
@@ -380,7 +393,6 @@ function HeatmapMap({
         setHoveredFeature(null)
       })
 
-      // Click to show incident count
       mapInstance.on('click', 'h3-heatmap-fill', (e) => {
         if (e.features.length > 0) {
           const feature = e.features[0]
@@ -396,68 +408,16 @@ function HeatmapMap({
         }
       })
 
-      console.log('Heatmap layers added successfully')
-
-      // DEBUG: Check if layer exists
-      try {
-        const layers = mapInstance.getStyle().layers
-        const heatmapLayer = layers.find(l => l.id === 'h3-heatmap-fill')
-        console.log('Heatmap layer exists?', !!heatmapLayer)
-        if (heatmapLayer) {
-          console.log('Layer paint:', heatmapLayer.paint)
-        }
-      } catch (err) {
-        console.error('Error checking layer:', err)
-      }
-
-      // AUTO-FIT TO SHOW HEXAGON
-      if (heatmapGeoJSON && heatmapGeoJSON.features.length > 0) {
-        console.log('Fitting bounds to hexagon')
+      if (heatmapGeoJSON.features.length > 0) {
         const bounds = heatmapGeoJSON.features.reduce((bounds, feature) => {
-          feature.geometry.coordinates[0].forEach(([lng, lat]) => {
-            bounds.extend([lng, lat])
-          })
+          feature.geometry.coordinates[0].forEach(([lng, lat]) => bounds.extend([lng, lat]))
           return bounds
         }, new mapboxgl.LngLatBounds())
 
         mapInstance.fitBounds(bounds, { padding: 50, duration: 1000 })
-        console.log('Fitted bounds, map center:', mapInstance.getCenter())
       }
     }
   }, [showHeatmap, heatmapGeoJSON])
-
-  // Route animation
-  useEffect(() => {
-    if (!hasRoute) {
-      return undefined
-    }
-
-    const startedAt = Date.now()
-
-    const animate = () => {
-      const elapsed = Date.now() - startedAt
-      const progress = Math.min(elapsed / routeAnimationDuration, 1)
-      const source = mapRef.current?.getSource('animated-route-source')
-
-      if (source && 'setData' in source) {
-        source.setData(
-          createRouteFeature(buildAnimatedRouteCoordinates(routeCoordinates, progress))
-        )
-      }
-
-      if (progress < 1) {
-        frameRef.current = requestAnimationFrame(animate)
-      }
-    }
-
-    frameRef.current = requestAnimationFrame(animate)
-
-    return () => {
-      if (frameRef.current) {
-        cancelAnimationFrame(frameRef.current)
-      }
-    }
-  }, [hasRoute, routeAnimationDuration, routeCoordinates])
 
   if (!MAPBOX_ACCESS_TOKEN) {
     return (
@@ -493,7 +453,9 @@ function HeatmapMap({
 
       {hoveredFeature ? (
         <div className='absolute bottom-4 left-4 rounded bg-white/95 px-3 py-2 text-sm shadow-sm'>
-          <p className='font-semibold text-stone-900'>{hoveredFeature.properties.count} incidents</p>
+          <p className='font-semibold text-stone-900'>
+            {hoveredFeature.properties.count} incidents
+          </p>
           <p className='text-xs text-stone-500'>Hover over hexagons for details</p>
         </div>
       ) : null}
@@ -501,55 +463,55 @@ function HeatmapMap({
   )
 }
 
+// ==================== HEATMAP CONTAINER ====================
 function Heatmap({ token, month = null, showRoute = false }) {
   const [heatmapData, setHeatmapData] = useState(null)
   const [heatmapLoading, setHeatmapLoading] = useState(Boolean(token))
   const [heatmapError, setHeatmapError] = useState(null)
+  const [osrmCoordinates, setOsrmCoordinates] = useState(FALLBACK_ROUTE_COORDINATES)
 
+  // Fetch heatmap data
   useEffect(() => {
-    if (!token) {
-      return
-    }
+    if (!token) return
 
     let active = true
     setHeatmapLoading(true)
 
-    // Choose the correct API call based on whether month is provided
     const apiCall = month ? fetchHeatmapByMonth(token, month) : fetchHeatmapPoints(token)
 
     apiCall
       .then((data) => {
-        if (!active) {
-          return
-        }
-
-        console.log('Heatmap data received:', data)
+        if (!active) return
         setHeatmapData(data)
-        console.log('📍 State set to:', data)
         setHeatmapError(null)
       })
       .catch((err) => {
-        if (!active) {
-          return
-        }
-        console.log('Heatmap data received:', data)
-        console.log('Data type:', data.type)
-        console.log('Data features:', data.features)
-        console.log('Is array?', Array.isArray(data.features))
-
-        console.error('Heatmap error:', err.message)
+        if (!active) return
         setHeatmapError(err?.message || 'Unable to load heatmap data.')
       })
       .finally(() => {
-        if (active) {
-          setHeatmapLoading(false)
-        }
+        if (active) setHeatmapLoading(false)
       })
 
     return () => {
       active = false
     }
   }, [token, month])
+
+  // Fetch OSRM route — hardcoded Cape Town CBD → Claremont for now
+  useEffect(() => {
+    if (!token) return
+
+    fetchOSRMRoute(OSRM_START.lng, OSRM_START.lat, OSRM_END.lng, OSRM_END.lat, token)
+      .then((geometry) => {
+        console.log("routes exist")
+        setOsrmCoordinates(geometry.coordinates)
+      })
+      .catch((err) => {
+        console.error('OSRM route error:', err)
+        setOsrmCoordinates(FALLBACK_ROUTE_COORDINATES)
+      })
+  }, [token])
 
   return (
     <div className='px-4'>
@@ -574,9 +536,15 @@ function Heatmap({ token, month = null, showRoute = false }) {
           ) : null}
         </div>
       </div>
-      <HeatmapMap heatmapData={heatmapData} showRoute={showRoute} showHeatmap={true} />
+      <HeatmapMap
+        heatmapData={heatmapData}
+        showRoute={true}
+        showHeatmap={true}
+        routeCoordinates={osrmCoordinates}
+      />
     </div>
   )
 }
 
 export default Heatmap
+
