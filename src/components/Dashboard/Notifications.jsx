@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
 import { API_BASE_URL, fetchUnreadNotifications } from '../../api'
 import emptyStateImage from '../../assets/images/notification-empty-state.svg'
+import notificationSfx from '../../assets/sounds/notification-sound.mp3'
 
 const Notifications = ({ token }) => {
     const [notificationCount, setNotificationCount] = useState(0)
@@ -11,6 +12,7 @@ const Notifications = ({ token }) => {
     const [loading, setLoading] = useState(Boolean(token))
     const [error, setError] = useState('')
 
+    const [play] = useSound(notificationSfx, { volume: 0.5 })
     const loadNotifications = () => {
         if (!token) {
             setNotificationCount(0)
@@ -96,7 +98,7 @@ const Notifications = ({ token }) => {
         return () => {
             socket.disconnect()
         }
-    }, [token])
+    }, [token, play])
 
     const label = error
         ? 'Unable to load notifications'
