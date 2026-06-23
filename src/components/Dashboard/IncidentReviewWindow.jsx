@@ -10,6 +10,8 @@ const DetailRow = ({ label, value }) => {
 }
 
 const IncidentReviewModal = ({ incident, onAcknowledge, onClose, onIgnore }) => {
+     console.log('video_url:', incident?.video_url)
+     console.log('full incident:', incident)
     return (
         <div
             className='fixed inset-0 z-50 flex items-center justify-center bg-stone-950/50 px-4 py-6'
