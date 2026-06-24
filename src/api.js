@@ -285,6 +285,17 @@ export async function fetchUnreadNotifications(token) {
   }
 }
 
+export async function markNotificationAsRead(token, notificationId) {
+  if (!notificationId) {
+    throw new Error('Missing notification ID for marking as read.')
+  }
+
+  return request(`/notifications/${encodeURIComponent(notificationId)}/read`, {
+    method: 'PUT',
+    headers: buildHeaders(token, false), // set json=false if payload is empty, standard headers handle the rest
+  })
+}
+
 /**
  * Fetch all heatmap data
  * @param {string} token - Authentication token
